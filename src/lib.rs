@@ -12,25 +12,99 @@ mod tests
          let mut o : Option<Box<super::Btree::node>> = None;
          o = super::Btree::node::insert(o, 44);
 
-         super::Btree::insert(33);
+         super::Btree::insert(33);             // 1
          assert!(super::Btree::search(33));
-         super::Btree::insert(34);
-         assert!(super::Btree::search(34));
-         super::Btree::insert(35);
-         assert!(super::Btree::search(35));
-         super::Btree::insert(36);
-         assert!(super::Btree::search(36));
-         super::Btree::insert(37);
-         assert!(super::Btree::search(37));
+
+         super::Btree::insert(23);             // 2
+         assert!(super::Btree::search(23));
+
+         super::Btree::insert(113);            // 3
+         assert!(super::Btree::search(113));
+
+         super::Btree::insert(78);             // 4
+         assert!(super::Btree::search(78));
+
+         super::Btree::insert(7);              // 5
+         assert!(super::Btree::search(7));
+
+         println!("First count = {}", unsafe{ super::Btree::count });
+
+         // remove 3
+         assert!(super::Btree::search(113));
+         super::Btree::delete(113);            // 3
+
+         assert!(super::Btree::search(33));    // 1
+         assert!(super::Btree::search(23));    // 2
+         assert!(!super::Btree::search(113));  // 3
+         assert!(super::Btree::search(78));    // 4
+         assert!(super::Btree::search(7));     // 5
+
+         // remove 5
+         super::Btree::delete(7);              // 5
+
+         assert!(super::Btree::search(33));    // 1
+         assert!(super::Btree::search(23));    // 2
+         assert!(!super::Btree::search(113));  // 3
+         assert!(super::Btree::search(78));    // 4
+         assert!(!super::Btree::search(7));    // 5
+
+         // remove 2
+         super::Btree::delete(23);             // 2
+
+         assert!(super::Btree::search(33));    // 1
+         assert!(!super::Btree::search(23));   // 2
+         assert!(!super::Btree::search(113));  // 3
+         assert!(super::Btree::search(78));    // 4
+         assert!(!super::Btree::search(7));    // 5
+
+         // remove 1
+         super::Btree::delete(33);             // 1
+
+         assert!(!super::Btree::search(33));   // 1
+         assert!(!super::Btree::search(23));   // 2
+         assert!(!super::Btree::search(113));  // 3
+         assert!(super::Btree::search(78));    // 4
+         assert!(!super::Btree::search(7));    // 5
+
+         // remove 4
+         super::Btree::delete(78);             // 4
+
+         assert!(!super::Btree::search(33));   // 1
+         assert!(!super::Btree::search(23));   // 2
+         assert!(!super::Btree::search(113));  // 3
+         assert!(!super::Btree::search(78));   // 4
+         assert!(!super::Btree::search(7));    // 5
+
     }
 }
 
 pub mod  Btree 
 {
 
-   static mut count: u32 = 0;
-   static mut  root: Option<Box<node>> = None;
+use std::fmt;
 
+   pub static mut count: u32 = 0;
+   pub static mut  root: Option<Box<node>> = None;
+
+   impl fmt::Display for node 
+   {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result 
+        {
+            write!(f, "(id: {}, left: {} right: {})", self.id, printNode(&self.left), printNode(&self.right))
+        }
+   }
+
+   pub fn printNode(node_: &Option<Box<node>>) -> String
+   {
+       if node_.is_some()
+       {
+           return node_.as_ref().unwrap().id.to_string();
+       }
+
+       let none = String::from("None");
+       none
+   }
+       
    pub fn search(id: u32) -> bool
    {
        unsafe
@@ -64,6 +138,22 @@ pub mod  Btree
             root_ = node::insert(root_, id);
             root_.as_mut().unwrap().red = false;
             root = root_.take();
+            println!("insert: root {}", root.as_ref().unwrap());
+            count = count + 1;
+        }
+    }
+
+    pub fn delete(id: u32)
+    {
+        unsafe
+        {
+            let mut root_ =  root.take();
+            root_ = node::delete(root_, id);
+            if root_.is_some()
+            {
+                root_.as_mut().unwrap().red = false;
+            }
+            root = root_.take();
         }
     }
 
@@ -86,10 +176,6 @@ pub mod  Btree
             {
                 None => 
                 { 
-                    unsafe 
-                    {
-                        count = count + 1;
-                    }
                     Some(Box::new(node{id:id, red: true, left:None, right:None}))
                 },
                 Some(x) => 
@@ -161,7 +247,6 @@ pub mod  Btree
 
         pub fn rotateRight(
             mut self ) -> node
-
         {
             let mut i = self.left.unwrap();
             i.red = self.red;
@@ -216,6 +301,25 @@ pub mod  Btree
         {
             self.red = !self.red;
         }
+        
+        pub fn delete(
+                      mut node_: Option<Box<node>>,
+                      id: u32 ) -> Option<Box<node>>
+         {
+            match node_
+            {
+                None => 
+                { 
+                    return node_
+                },
+                Some(x) => 
+                {
+                    let p = x.delete_(id);
+                    node::fixUp(p)
+                }
+            }
+            // node::fixUp(node_)
+        }
 
         pub fn delete_(
                       mut self,
@@ -228,7 +332,7 @@ pub mod  Btree
                 {
                     self = node::moveRedLeft(self);
                 }
-                // self.left = node::delete_(self.left, id);
+                self.left = node::delete(self.left, id);
             }
             else
             {
@@ -246,6 +350,7 @@ pub mod  Btree
                    }
                    return None;
                 }
+
                 if self.right.is_some() && !node::isRed(&self.right) &&
                     self.left.is_some() && !node::isRed(&self.right.as_ref().unwrap().left)
                 {
@@ -255,22 +360,86 @@ pub mod  Btree
 
             if id == self.id
             {
-                let leftMostNode = node::getMinNode(&self.right).as_ref().unwrap();
-                self.id          = leftMostNode.id;
-                // self.right       = node::delete(self.right);
-            }
-            // else
-            // {
 
-            None
+                // let right = &self.right;
+                // let leftMostNode = node::getMinNode(&self.right);
+                // self.id          = leftMostNode;
+                // self.right       = node::deleteMinHelper(self.right);
+
+
+                {
+                    let leftMostNode = node::getMinNode(&self.right).as_ref().unwrap();
+                    self.id          = leftMostNode.id;
+                }
+                self.right       = node::deleteMinHelper(self.right);
+            }
+            else
+            {
+                self.right = node::delete(self.right, id);
+            }
+
+            Some(Box::new(self))
          }
+
+        pub fn deleteMinHelper(
+            mut node_: Option<Box<node>>) -> Option<Box<node>>
+        {
+            if node_.as_ref().unwrap().left.is_none()
+            {
+                drop(node_);
+                unsafe
+                {
+                    count = count - 1;
+                }
+                return None
+            }
+
+            let node_tmp = node_.unwrap();
+
+            if node_tmp.left.is_some() && !node::isRed(&node_tmp.left) &&
+                node_tmp.right.is_some() && !node::isRed(&node_tmp.left.as_ref().unwrap().left)
+            {
+                let node_t = node::moveRedLeft(*node_tmp);
+                node_ = Some(Box::new(node_t));
+            }
+            else
+            {
+                node_ = Some(node_tmp);
+            }
+            let mut left = node_.as_mut().unwrap().left.take();
+            left = node::deleteMinHelper(left);
+            node_.as_mut().unwrap().left = left;
+            node::fixUp(node_)
+        }
+
+        pub fn fixUp(
+            mut node_: Option<Box<node>>) -> Option<Box<node>>
+        {
+            if node_.is_some()
+            {
+                if !node::isRed(&node_.as_ref().unwrap().left) && 
+                    node::isRed(&node_.as_ref().unwrap().right)
+                {
+                    node_ = Some(Box::new(node_.unwrap().rotateLeft()));
+                }
+
+                if !node::isRed(&node_.as_ref().unwrap().left) && node_.as_ref().unwrap().left.is_some() &&
+                    node::isRed(&node_.as_ref().unwrap().left.as_ref().unwrap().left)
+                {
+                    node_ = Some(Box::new(node_.unwrap().rotateRight()));
+                }
+            }
+            node_
+        }
 
         pub fn getMinNode(
             node_: &Option<Box<node>>) -> &Option<Box<node>>
+            // node_: &Option<Box<node>>) -> u32
         {
             if node_.as_ref().unwrap().left.is_none()
             {
                 return node_;
+                // return node_.as_ref().unwrap().id
             }
             node::getMinNode(node_)
         }
