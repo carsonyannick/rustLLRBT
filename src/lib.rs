@@ -6,8 +6,8 @@ mod tests
     fn it_works() 
     {
          let mut p: Option<Box<super::Btree::node>> = Some(Box::new(super::Btree::node{id:1, red: true, left:None, right:None}));
-         p = p.unwrap().insert_(11);
-         p.unwrap().insert_(11);
+         // p = p.unwrap().insert_(11);
+         // p.unwrap().insert_(11);
 
          let mut o : Option<Box<super::Btree::node>> = None;
          o = super::Btree::node::insert(o, 44);
@@ -28,7 +28,7 @@ mod tests
          assert!(super::Btree::search(7));
 
          println!("First count = {}", unsafe{ super::Btree::count });
-
+/*
          // remove 3
          assert!(super::Btree::search(113));
          super::Btree::delete(113);            // 3
@@ -74,7 +74,7 @@ mod tests
          assert!(!super::Btree::search(113));  // 3
          assert!(!super::Btree::search(78));   // 4
          assert!(!super::Btree::search(7));    // 5
-
+*/
     }
 }
 
@@ -86,7 +86,7 @@ use std::fmt;
    pub static mut count: u32 = 0;
    pub static mut  root: Option<Box<node>> = None;
 
-   impl fmt::Display for node 
+   impl<'a> fmt::Display for node 
    {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result 
         {
@@ -148,7 +148,7 @@ use std::fmt;
         unsafe
         {
             let mut root_ =  root.take();
-            root_ = node::delete(root_, id);
+            // root_ = node::delete(root_, id);
             if root_.is_some()
             {
                 root_.as_mut().unwrap().red = false;
@@ -165,7 +165,7 @@ use std::fmt;
         pub right: Option<Box< node>>,
    }
 
-    impl node
+    impl<'a> node
     {
         
         pub fn insert(
@@ -175,62 +175,63 @@ use std::fmt;
             match node_
             {
                 None => 
-                { 
-                    Some(Box::new(node{id:id, red: true, left:None, right:None}))
-                },
+                { Some(Box::new(node{id:id, red: true, left:None, right:None})) },
                 Some(x) => 
                 {
-                    x.insert_(id)
+                    // x.insert_(id)
+                    node::insert_(x,id)
                 }
             }
         }
 
         pub fn insert_(
-                      mut self,
+                      // mut self,
+                      mut node_: Box<node>,
                       id: u32 ) -> Option<Box<node>>
         {
-               if node::isRed(&self.right) && node::isRed(&self.left)
+               if node::isRed(&node_.right) && node::isRed(&node_.left)
                {    
-                   self.colorFlip();
+                   node_.colorFlip();
                }
 
 
-               if id < self.id 
+               if id <node_.id 
                {
-                   if self.left.is_none()
+                   if node_.left.is_none()
                    {
-                       self.left = Some(Box::new(node{id:id, red: true, left:None, right:None}));
+                       node_.left = Some(Box::new(node{id:id, red: true, left:None, right:None}));
                    }
                    else
                    {
-                       self.left = node::insert(self.left,id );
+                       node_.left = node::insert(node_.left,id );
                    }
                }
                else
                {
-                   if self.right.is_none()
+                   if node_.right.is_none()
                    {
-                       self.right = Some(Box::new(node{id:id, red: true, left:None, right:None}));
+                       node_.right = Some(Box::new(node{id:id, red: true, left:None, right:None}));
                    }
                    else
                    {
-                       // self.right = self.right.unwrap().insert(id );
-                       self.right = node::insert(self.right,id );
+                       //node_.right =node_.right.unwrap().insert(id );
+                       node_.right = node::insert(node_.right,id );
                    }
                }
 
                // different from cpp implementation; follows example from slides
-               if !node::isRed(&self.left)
+               if !node::isRed(&node_.left)
                {
-                   self = self.rotateLeft();
+                   *node_= node_.rotateLeft();
                }
 
-               if node::isRed(&self.left) && node::isRed(&self.left.as_ref().unwrap().left)
+               if node::isRed(&node_.left) && node::isRed(&node_.left.as_ref().unwrap().left)
                {
-                   self = self.rotateRight();
+                   *node_= node_.rotateRight();
                }
 
-               Some(Box::new(self))
+               // Some(Box::new(node_))
+               Some((node_))
         }
 
         pub fn rotateLeft(
@@ -268,16 +269,16 @@ use std::fmt;
             }
         }
 
-        pub fn new(
-          id: u32) -> node
-        {
-            // let leftt: &'a mut Option<&'a mut node<'a>> =  &mut None;
-            // let rightt: &'a mut Option<&'a mut node<'a>> = &mut None;
-            // let right: &'a mut Option<&'a mut node<'a>> = &mut None;
+        // pub fn new(
+        //   id: u32) -> node
+        // {
+        //     // let leftt: &'a mut Option<&'a mut node<'a>> =  &mut None;
+        //     // let rightt: &'a mut Option<&'a mut node<'a>> = &mut None;
+        //     // let right: &'a mut Option<&'a mut node<'a>> = &mut None;
 
-            node{id:id, red: true, left:None, right:None}
-            // node{id:id, red: true, left:left, right:right}
-        }
+        //     node{id:id, red: true, left:None, right:None}
+        //     // node{id:id, red: true, left:left, right:right}
+        // }
 
 
         pub fn colorFlip(&mut self) 
@@ -302,6 +303,7 @@ use std::fmt;
             self.red = !self.red;
         }
         
+/*
         pub fn delete(
                       mut node_: Option<Box<node>>,
                       id: u32 ) -> Option<Box<node>>
@@ -411,7 +413,7 @@ use std::fmt;
             node_.as_mut().unwrap().left = left;
             node::fixUp(node_)
         }
-
+*/
         pub fn fixUp(
             mut node_: Option<Box<node>>) -> Option<Box<node>>
         {
@@ -431,7 +433,7 @@ use std::fmt;
             }
             node_
         }
-
+/*
         pub fn getMinNode(
             node_: &Option<Box<node>>) -> &Option<Box<node>>
             // node_: &Option<Box<node>>) -> u32
@@ -479,6 +481,6 @@ use std::fmt;
             // *nodeBox = node_t;
             Some(Box::new(node_t))
         }
-
+*/
     }
 }
