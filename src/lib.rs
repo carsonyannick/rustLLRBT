@@ -5,13 +5,6 @@ mod tests
     #[test]
     fn it_works() 
     {
-         let mut p: Option<Box<super::Btree::node>> = Some(Box::new(super::Btree::node{id:1, red: true, left:None, right:None}));
-         // p = p.unwrap().insert_(11);
-         // p.unwrap().insert_(11);
-
-         let mut o : Option<Box<super::Btree::node>> = None;
-         o = super::Btree::node::insert(o, 44);
-
          super::Btree::insert(33);             // 1
          assert!(super::Btree::search(33));
 
@@ -26,6 +19,12 @@ mod tests
 
          super::Btree::insert(7);              // 5
          assert!(super::Btree::search(7));
+
+         assert!(super::Btree::search(33));    // 1
+         assert!(super::Btree::search(23));    // 2
+         assert!(super::Btree::search(113));   // 3
+         assert!(super::Btree::search(78));    // 4
+         assert!(super::Btree::search(7));     // 5
 
          println!("First count = {}", unsafe{ super::Btree::count });
 /*
@@ -203,7 +202,7 @@ use std::fmt;
                    }
                    else
                    {
-                       node_.left = node::insert(node_.left,id );
+                       node_.left = node::insert(node_.left.take(),id );
                    }
                }
                else
@@ -211,23 +210,23 @@ use std::fmt;
                    if node_.right.is_none()
                    {
                        node_.right = Some(Box::new(node{id:id, red: true, left:None, right:None}));
-                   }
-                   else
+                   } else
                    {
-                       //node_.right =node_.right.unwrap().insert(id );
-                       node_.right = node::insert(node_.right,id );
+                       node_.right = node::insert(node_.right.take(),id );
                    }
                }
+
+               let node_out: Option<Box<node>>;
 
                // different from cpp implementation; follows example from slides
                if !node::isRed(&node_.left)
                {
-                   *node_= node_.rotateLeft();
+                   node_ = node::rotateLeft(node_);
                }
 
                if node::isRed(&node_.left) && node::isRed(&node_.left.as_ref().unwrap().left)
                {
-                   *node_= node_.rotateRight();
+                   node_ = node::rotateRight(node_);
                }
 
                // Some(Box::new(node_))
@@ -235,26 +234,42 @@ use std::fmt;
         }
 
         pub fn rotateLeft(
-            mut self ) -> node
+            // mut self ) -> node
+             mut node_: Box<node> ) -> Box<node>
 
         {
-            let mut i = self.right.unwrap();
-            i.red = self.red;
-            self.red = true;
-            self.right = i.left.take();
-            i.left = Some(Box::new(self));
-            *i
+            let mut i = node_.right.take().unwrap();
+            i.red = node_.red;
+            node_.red = true;
+            node_.right = i.left.take();
+            i.left = Some(node_);
+            i
+
+            // let mut i = self.right.unwrap();
+            // i.red = self.red;
+            // self.red = true;
+            // self.right = i.left.take();
+            // i.left = Some(Box::new(self));
+            // *i
         }
 
         pub fn rotateRight(
-            mut self ) -> node
+             mut node_: Box<node> ) -> Box<node>
+            // mut self ) -> node
         {
-            let mut i = self.left.unwrap();
-            i.red = self.red;
-            self.red = true;
-            self.left = i.right.take();
-            i.right = Some(Box::new(self));
-            *i
+            let mut i = node_.left.take().unwrap();
+            i.red = node_.red;
+            node_.red = true;
+            node_.left = i.right.take();
+            i.right= Some(node_);
+            i
+
+            // let mut i = self.left.unwrap();
+            // i.red = self.red;
+            // self.red = true;
+            // self.left = i.right.take();
+            // i.right = Some(Box::new(self));
+            // *i
         }
 
         fn isRed( node_: &Option<Box<node>>) -> bool
@@ -414,6 +429,8 @@ use std::fmt;
             node::fixUp(node_)
         }
 */
+    /*
+
         pub fn fixUp(
             mut node_: Option<Box<node>>) -> Option<Box<node>>
         {
@@ -422,7 +439,8 @@ use std::fmt;
                 if !node::isRed(&node_.as_ref().unwrap().left) && 
                     node::isRed(&node_.as_ref().unwrap().right)
                 {
-                    node_ = Some(Box::new(node_.unwrap().rotateLeft()));
+                    // node_ = Some(Box::new(node_.unwrap().rotateLeft()));
+                    node_ = Some(node::rotateLeft(node_));
                 }
 
                 if !node::isRed(&node_.as_ref().unwrap().left) && node_.as_ref().unwrap().left.is_some() &&
@@ -433,6 +451,7 @@ use std::fmt;
             }
             node_
         }
+    */
 /*
         pub fn getMinNode(
             node_: &Option<Box<node>>) -> &Option<Box<node>>
