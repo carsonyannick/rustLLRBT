@@ -27,7 +27,7 @@ mod tests
          assert!(super::Btree::search(7));     // 5
 
          println!("First count = {}", unsafe{ super::Btree::count });
-/*
+
          // remove 3
          assert!(super::Btree::search(113));
          super::Btree::delete(113);            // 3
@@ -73,7 +73,6 @@ mod tests
          assert!(!super::Btree::search(113));  // 3
          assert!(!super::Btree::search(78));   // 4
          assert!(!super::Btree::search(7));    // 5
-*/
     }
 }
 
@@ -113,7 +112,6 @@ use std::fmt;
            {
                if node_.id == id
                {
-                   // node_
                    return true;
                }
                if id < node_.id
@@ -147,7 +145,7 @@ use std::fmt;
         unsafe
         {
             let mut root_ =  root.take();
-            // root_ = node::delete(root_, id);
+            root_ = node::delete(root_, id);
             if root_.is_some()
             {
                 root_.as_mut().unwrap().red = false;
@@ -229,12 +227,10 @@ use std::fmt;
                    node_ = node::rotateRight(node_);
                }
 
-               // Some(Box::new(node_))
                Some((node_))
         }
 
         pub fn rotateLeft(
-            // mut self ) -> node
              mut node_: Box<node> ) -> Box<node>
 
         {
@@ -244,18 +240,10 @@ use std::fmt;
             node_.right = i.left.take();
             i.left = Some(node_);
             i
-
-            // let mut i = self.right.unwrap();
-            // i.red = self.red;
-            // self.red = true;
-            // self.right = i.left.take();
-            // i.left = Some(Box::new(self));
-            // *i
         }
 
         pub fn rotateRight(
              mut node_: Box<node> ) -> Box<node>
-            // mut self ) -> node
         {
             let mut i = node_.left.take().unwrap();
             i.red = node_.red;
@@ -263,13 +251,6 @@ use std::fmt;
             node_.left = i.right.take();
             i.right= Some(node_);
             i
-
-            // let mut i = self.left.unwrap();
-            // i.red = self.red;
-            // self.red = true;
-            // self.left = i.right.take();
-            // i.right = Some(Box::new(self));
-            // *i
         }
 
         fn isRed( node_: &Option<Box<node>>) -> bool
@@ -283,18 +264,6 @@ use std::fmt;
                 node_.as_ref().unwrap().red
             }
         }
-
-        // pub fn new(
-        //   id: u32) -> node
-        // {
-        //     // let leftt: &'a mut Option<&'a mut node<'a>> =  &mut None;
-        //     // let rightt: &'a mut Option<&'a mut node<'a>> = &mut None;
-        //     // let right: &'a mut Option<&'a mut node<'a>> = &mut None;
-
-        //     node{id:id, red: true, left:None, right:None}
-        //     // node{id:id, red: true, left:left, right:right}
-        // }
-
 
         pub fn colorFlip(&mut self) 
         {
@@ -318,7 +287,6 @@ use std::fmt;
             self.red = !self.red;
         }
         
-/*
         pub fn delete(
                       mut node_: Option<Box<node>>,
                       id: u32 ) -> Option<Box<node>>
@@ -331,36 +299,35 @@ use std::fmt;
                 },
                 Some(x) => 
                 {
-                    let p = x.delete_(id);
+                    let p = node::delete_(x,id);
                     node::fixUp(p)
                 }
             }
-            // node::fixUp(node_)
         }
 
         pub fn delete_(
-                      mut self,
+                      mut node_: Box<node>,
                       id: u32 ) -> Option<Box<node>>
          {
-            if id < self.id 
+            if id < node_.id 
             {
-                if self.left.is_some() && !node::isRed(&self.left) &&
-                    self.right.is_some() && !node::isRed(&self.left.as_ref().unwrap().left)
+                if node_.left.is_some() && !node::isRed(& node_.left) &&
+                     node_.right.is_some() && !node::isRed(& node_.left.as_ref().unwrap().left)
                 {
-                    self = node::moveRedLeft(self);
+                     node_= node::moveRedLeft( node_);
                 }
-                self.left = node::delete(self.left, id);
+                 node_.left = node::delete( node_.left.take(), id);
             }
             else
             {
-                if node::isRed(&self.left)
+                if node::isRed(& node_.left)
                 {
-                    self = self.rotateRight();
+                     node_= node::rotateRight(node_);
                 }
 
-                if id == self.id && self.right.is_none()
+                if id == node_.id && node_.right.is_none()
                 {
-                   drop(self);
+                   drop( node_);
                    unsafe
                    {
                        count = count - 1;
@@ -368,34 +335,28 @@ use std::fmt;
                    return None;
                 }
 
-                if self.right.is_some() && !node::isRed(&self.right) &&
-                    self.left.is_some() && !node::isRed(&self.right.as_ref().unwrap().left)
+                if node_.right.is_some() && !node::isRed(& node_.right) &&
+                     node_.left.is_some() && !node::isRed(& node_.right.as_ref().unwrap().left)
                 {
-                    self = node::moveRedRight(self);
+                     node_= node::moveRedRight( node_);
                 }
             }
 
-            if id == self.id
+            if id == node_.id
             {
-
-                // let right = &self.right;
-                // let leftMostNode = node::getMinNode(&self.right);
-                // self.id          = leftMostNode;
-                // self.right       = node::deleteMinHelper(self.right);
-
-
+                node_.id =
                 {
-                    let leftMostNode = node::getMinNode(&self.right).as_ref().unwrap();
-                    self.id          = leftMostNode.id;
-                }
-                self.right       = node::deleteMinHelper(self.right);
+                    let leftMostNode = node::getMinNode(&node_.right).as_ref().unwrap();
+                    leftMostNode.id
+                };
+
+                node_.right = node::deleteMinHelper( node_.right.take());
             }
             else
             {
-                self.right = node::delete(self.right, id);
+                 node_.right = node::delete( node_.right.take(), id);
             }
-
-            Some(Box::new(self))
+            Some(( node_))
          }
 
         pub fn deleteMinHelper(
@@ -410,14 +371,12 @@ use std::fmt;
                 }
                 return None
             }
-
             let node_tmp = node_.unwrap();
-
             if node_tmp.left.is_some() && !node::isRed(&node_tmp.left) &&
                 node_tmp.right.is_some() && !node::isRed(&node_tmp.left.as_ref().unwrap().left)
             {
-                let node_t = node::moveRedLeft(*node_tmp);
-                node_ = Some(Box::new(node_t));
+                let node_t = node::moveRedLeft(node_tmp);
+                node_ = Some(node_t);
             }
             else
             {
@@ -428,8 +387,6 @@ use std::fmt;
             node_.as_mut().unwrap().left = left;
             node::fixUp(node_)
         }
-*/
-    /*
 
         pub fn fixUp(
             mut node_: Option<Box<node>>) -> Option<Box<node>>
@@ -439,67 +396,57 @@ use std::fmt;
                 if !node::isRed(&node_.as_ref().unwrap().left) && 
                     node::isRed(&node_.as_ref().unwrap().right)
                 {
-                    // node_ = Some(Box::new(node_.unwrap().rotateLeft()));
-                    node_ = Some(node::rotateLeft(node_));
+                    node_ = Some(node::rotateLeft(node_.unwrap()));
                 }
-
                 if !node::isRed(&node_.as_ref().unwrap().left) && node_.as_ref().unwrap().left.is_some() &&
                     node::isRed(&node_.as_ref().unwrap().left.as_ref().unwrap().left)
                 {
-                    node_ = Some(Box::new(node_.unwrap().rotateRight()));
+                    node_ = Some(node::rotateRight(node_.unwrap()));
                 }
             }
             node_
         }
-    */
-/*
+
         pub fn getMinNode(
             node_: &Option<Box<node>>) -> &Option<Box<node>>
-            // node_: &Option<Box<node>>) -> u32
         {
             if node_.as_ref().unwrap().left.is_none()
             {
                 return node_;
-                // return node_.as_ref().unwrap().id
             }
             node::getMinNode(node_)
         }
 
-        fn moveRedRight(mut self) -> node
+        fn moveRedRight(mut node_: Box<node>) -> Box<node>
         {
-            self.colorFlip();
-            if node::isRed(&self.left.as_ref().unwrap().left) 
+            node_.colorFlip();
+            if node::isRed(&node_.left.as_ref().unwrap().left) 
             {
-                self = self.rotateRight();
-                self.colorFlip();
+                node_= node::rotateRight(node_);
+                node_.colorFlip();
             }
-            self
+            node_
         }
 
-        fn moveRedLeft(mut self) -> node
+        fn moveRedLeft(mut node_: Box<node>) -> Box<node>
         {
-            self.colorFlip();
-            if node::isRed(&self.right.as_ref().unwrap().left) 
+            node_.colorFlip();
+            if node::isRed(&node_.right.as_ref().unwrap().left) 
             {
-                // self.right.unwrap() = self.right.unwrap().rotateRight();
-                self.right = node::rotateRightOption(self.right);
-                self = self.rotateLeft();
-                self.colorFlip();
+                node_.right = node::rotateRightOption(node_.right.take());
+                node_= node::rotateLeft(node_);
+                node_.colorFlip();
             }
-            self
+            node_
         }
 
         pub fn rotateRightOption(
             mut node_: Option<Box<node>>) -> Option<Box<node>>
         {
-            // this whole function needs re-working to use a ref
-            //     so that we don't have to reBox after rotateRight()
             let mut nodeBox = node_.unwrap();
-            let mut node_t = nodeBox.rotateRight();
-            // let mut node_t = nodeBox.rotateRight();
-            // *nodeBox = node_t;
-            Some(Box::new(node_t))
+            Some(node::rotateRight(nodeBox))
         }
-*/
-    }
-}
+
+     }
+
+ }
