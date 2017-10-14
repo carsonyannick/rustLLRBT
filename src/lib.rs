@@ -5,6 +5,31 @@ mod tests
     #[test]
     fn it_works() 
     {
+
+         super::Btree::insert(33);             // 1
+         super::Btree::insert(23);             // 1
+         super::Btree::insert(113);             // 1
+         super::Btree::insert(78);             // 1
+         super::Btree::insert(7);             // 1
+
+         super::Btree::insert(423);             // 1
+         super::Btree::insert(1413);             // 1
+         super::Btree::insert(478);             // 1
+         super::Btree::insert(74);             // 1
+
+         super::Btree::insert(4323);             // 1
+         super::Btree::insert(1913);             // 1
+         super::Btree::insert(4278);             // 1
+         super::Btree::insert(724);             // 1
+
+         super::Btree::insert(3323);             // 1
+         super::Btree::insert(9913);             // 1
+         super::Btree::insert(2278);             // 1
+         super::Btree::insert(2724);             // 1
+
+         super::Btree::node::draw();
+
+        /*
          super::Btree::insert(33);             // 1
          assert!(super::Btree::search(33));
 
@@ -26,7 +51,7 @@ mod tests
          assert!(super::Btree::search(78));    // 4
          assert!(super::Btree::search(7));     // 5
 
-         println!("First count = {}", unsafe{ super::Btree::count });
+         super::Btree::node::draw();
 
          // remove 3
          assert!(super::Btree::search(113));
@@ -73,6 +98,7 @@ mod tests
          assert!(!super::Btree::search(113));  // 3
          assert!(!super::Btree::search(78));   // 4
          assert!(!super::Btree::search(7));    // 5
+         */
     }
 }
 
@@ -80,6 +106,9 @@ pub mod  Btree
 {
 
 use std::fmt;
+// use std::io;
+use std::io::prelude::*;
+use std::fs::File;
 
    pub static mut count: u32 = 0;
    pub static mut  root: Option<Box<node>> = None;
@@ -175,7 +204,6 @@ use std::fmt;
                 { Some(Box::new(node{id:id, red: true, left:None, right:None})) },
                 Some(x) => 
                 {
-                    // x.insert_(id)
                     node::insert_(x,id)
                 }
             }
@@ -217,7 +245,8 @@ use std::fmt;
                let node_out: Option<Box<node>>;
 
                // different from cpp implementation; follows example from slides
-               if !node::isRed(&node_.left)
+               // if !node::isRed(&node_.left)
+               if !node::isRed(&node_.left) && node::isRed(&node_.right)
                {
                    node_ = node::rotateLeft(node_);
                }
@@ -232,7 +261,6 @@ use std::fmt;
 
         pub fn rotateLeft(
              mut node_: Box<node> ) -> Box<node>
-
         {
             let mut i = node_.right.take().unwrap();
             i.red = node_.red;
@@ -445,6 +473,86 @@ use std::fmt;
         {
             let mut nodeBox = node_.unwrap();
             Some(node::rotateRight(nodeBox))
+        }
+
+        pub fn draw()
+        {
+            let &root_;
+            unsafe
+            {
+                root_ =  root.as_ref().unwrap();
+            }
+
+            let mut levels: Vec<Vec<String>> = Vec::new();
+            root_.draw_(&mut levels, 1);
+
+            let mut f = match File::create("/home/aa/rust/b-tree/src/foo.txt")
+            {
+                Err(e) => panic!("Can't open file"),
+                Ok(f) => f,
+            };
+
+            for outer in &levels
+            {
+                for inner in outer
+                {
+                    println!("{}", inner);
+                    let result = f.write_all(inner.as_bytes());
+                    match result {
+                        Err(e) => panic!(e),
+                        // Ok(r) => println!("Write successful!"),
+                        Ok(r) => (),
+                };
+
+                }
+            }
+
+            let result = f.flush();
+            match result {
+                Err(e) => panic!(e),
+                Ok(r) => println!("Flush successful!"),
+            };
+        }
+
+        pub fn draw_(&self, ref mut levels:  &mut Vec<Vec<String>>, level: usize)
+        {
+            let mut output = String::new();
+            if levels.len() < level
+            {
+                levels.push(Vec::<String>::new());
+                if levels.len() != level
+                {
+                    panic!("nooo00ooowwww!!!! levels.len(): {}, level: {}", levels.len(), level);
+                }
+            }
+            // output = format!("{:^22}\n", format!("node: {}",  self.id));
+            // output = format!("{:>7}\n", format!("node: {}",  self.id));
+            output = format!("{}\n", format!("//node: {}",  self.id));
+            if(self.left.is_some())
+            {
+                let left = self.left.as_ref().unwrap();
+                // output += &format!("{:<11}", format!("left: {}", left.id));
+                output += &format!("{}", format!("left: {}\n", left.id));
+                left.draw_( levels, (level + 1));
+            }
+            else
+            {
+                // output += &format!("{:<11}", format!("left: {}", "None"));
+                output += &format!("{}", format!("left: {}\n", "None"));
+            }
+            if(self.right.is_some())
+            {
+                let right = self.right.as_ref().unwrap();
+                // output += &format!("{:>11}", format!("right: {}\n", right.id));
+                output += &format!("{}", format!("right: {}\n", right.id));
+                right.draw_( levels, (level + 1));
+            }
+            else
+            {
+                // output += &format!("{:<11}", format!("right: {}\n", "None"));
+                output += &format!("{}", format!("right: {}\n", "None"));
+            }
+            levels[level-1].push(output);
         }
 
      }
