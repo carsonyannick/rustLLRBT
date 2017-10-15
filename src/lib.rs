@@ -16,6 +16,7 @@ mod tests
          super::Btree::insert(1413);             // 1
          super::Btree::insert(478);             // 1
          super::Btree::insert(74);             // 1
+         // super::Btree::node::draw();
 
          super::Btree::insert(4323);             // 1
          super::Btree::insert(1913);             // 1
@@ -160,11 +161,11 @@ use std::fs::File;
     {
         unsafe
         {
+            println!("insert: {}", id);
             let mut root_ =  root.take();
             root_ = node::insert(root_, id);
             root_.as_mut().unwrap().red = false;
             root = root_.take();
-            println!("insert: root {}", root.as_ref().unwrap());
             count = count + 1;
         }
     }
@@ -201,7 +202,7 @@ use std::fs::File;
             match node_
             {
                 None => 
-                { Some(Box::new(node{id:id, red: true, left:None, right:None})) },
+                { Some(Box::new(node{id:id, red: false, left:None, right:None})) },
                 Some(x) => 
                 {
                     node::insert_(x,id)
@@ -214,7 +215,7 @@ use std::fs::File;
                       mut node_: Box<node>,
                       id: u32 ) -> Option<Box<node>>
         {
-               if node::isRed(&node_.right) && node::isRed(&node_.left)
+               if node::isRed(&node_.left) && node::isRed(&node_.right)
                {    
                    node_.colorFlip();
                }
@@ -224,7 +225,7 @@ use std::fs::File;
                {
                    if node_.left.is_none()
                    {
-                       node_.left = Some(Box::new(node{id:id, red: true, left:None, right:None}));
+                       node_.left = Some(Box::new(node{id:id, red: false, left:None, right:None}));
                    }
                    else
                    {
@@ -235,7 +236,7 @@ use std::fs::File;
                {
                    if node_.right.is_none()
                    {
-                       node_.right = Some(Box::new(node{id:id, red: true, left:None, right:None}));
+                       node_.right = Some(Box::new(node{id:id, red: false, left:None, right:None}));
                    } else
                    {
                        node_.right = node::insert(node_.right.take(),id );
@@ -248,11 +249,13 @@ use std::fs::File;
                // if !node::isRed(&node_.left)
                if !node::isRed(&node_.left) && node::isRed(&node_.right)
                {
+                   println!("rotate left");
                    node_ = node::rotateLeft(node_);
                }
 
                if node::isRed(&node_.left) && node::isRed(&node_.left.as_ref().unwrap().left)
                {
+                   println!("rotate right");
                    node_ = node::rotateRight(node_);
                }
 
@@ -262,12 +265,21 @@ use std::fs::File;
         pub fn rotateLeft(
              mut node_: Box<node> ) -> Box<node>
         {
-            let mut i = node_.right.take().unwrap();
-            i.red = node_.red;
-            node_.red = true;
-            node_.right = i.left.take();
-            i.left = Some(node_);
+
+
+            let mut i = node_.right.take().unwrap();  //1
+            i.red = node_.red;   // 4
+            node_.red = true;    // 5
+            node_.right = i.left.take(); // 2
+            i.left = Some(node_);  // 3
             i
+
+            // let mut i = node_.right.take().unwrap();
+            // i.red = node_.red;
+            // node_.red = true;
+            // node_.right = i.left.take();
+            // i.left = Some(node_);
+            // i
         }
 
         pub fn rotateRight(
