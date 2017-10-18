@@ -1,36 +1,46 @@
 #![feature(drop_types_in_const)]
 #[cfg(test)]
+
+pub mod socket;
+
 mod tests 
 {
     #[test]
     fn it_works() 
     {
+         // super::Btree::insert(1);             // 1
+         // super::Btree::insert(2);             // 1
+         // super::Btree::insert(3);             // 1
+         // super::Btree::insert(4);             // 1
+         // super::Btree::insert(5);             // 1
+         // super::Btree::insert(6);             // 1
+         // super::Btree::insert(7);             // 1
+         // super::Btree::insert(10);            // 1
 
-         super::Btree::insert(33);             // 1
-         super::Btree::insert(23);             // 1
-         super::Btree::insert(113);             // 1
-         super::Btree::insert(78);             // 1
-         super::Btree::insert(7);             // 1
+         // super::Btree::insert(33);             // 1
+         // super::Btree::insert(23);             // 1
+         // super::Btree::insert(113);             // 1
+         // super::Btree::insert(78);             // 1
+         // super::Btree::insert(7);             // 1
 
-         super::Btree::insert(423);             // 1
-         super::Btree::insert(1413);             // 1
-         super::Btree::insert(478);             // 1
-         super::Btree::insert(74);             // 1
+         // super::Btree::insert(423);             // 1
+         // super::Btree::insert(1413);             // 1
+         // super::Btree::insert(478);             // 1
+         // super::Btree::insert(74);             // 1
+         // // super::Btree::node::draw();
+
+         // super::Btree::insert(4323);             // 1
+         // super::Btree::insert(1913);             // 1
+         // super::Btree::insert(4278);             // 1
+         // super::Btree::insert(724);             // 1
+
+//          super::Btree::insert(3323);             // 1
+//          super::Btree::insert(9913);             // 1
+//          super::Btree::insert(2278);             // 1
+//          super::Btree::insert(2724);             // 1
+
          // super::Btree::node::draw();
 
-         super::Btree::insert(4323);             // 1
-         super::Btree::insert(1913);             // 1
-         super::Btree::insert(4278);             // 1
-         super::Btree::insert(724);             // 1
-
-         super::Btree::insert(3323);             // 1
-         super::Btree::insert(9913);             // 1
-         super::Btree::insert(2278);             // 1
-         super::Btree::insert(2724);             // 1
-
-         super::Btree::node::draw();
-
-        /*
          super::Btree::insert(33);             // 1
          assert!(super::Btree::search(33));
 
@@ -54,8 +64,7 @@ mod tests
 
          super::Btree::node::draw();
 
-         // remove 3
-         assert!(super::Btree::search(113));
+         // remove 3 assert!(super::Btree::search(113));
          super::Btree::delete(113);            // 3
 
          assert!(super::Btree::search(33));    // 1
@@ -99,15 +108,24 @@ mod tests
          assert!(!super::Btree::search(113));  // 3
          assert!(!super::Btree::search(78));   // 4
          assert!(!super::Btree::search(7));    // 5
-         */
     }
+
+    // use super::socket;
+    // use socket;
+    fn server()
+    {
+        let socketAddress = String::from("/tmp/LLRBTRustSocket");
+        // super::socket::new(socketAddress);
+        socket::new(socketAddress);
+
+    }
+
 }
 
-pub mod  Btree 
+pub mod Btree 
 {
 
 use std::fmt;
-// use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 
@@ -202,7 +220,7 @@ use std::fs::File;
             match node_
             {
                 None => 
-                { Some(Box::new(node{id:id, red: false, left:None, right:None})) },
+                { Some(Box::new(node{id:id, red: true, left:None, right:None})) },
                 Some(x) => 
                 {
                     node::insert_(x,id)
@@ -221,11 +239,11 @@ use std::fs::File;
                }
 
 
-               if id <node_.id 
+               if id < node_.id 
                {
                    if node_.left.is_none()
                    {
-                       node_.left = Some(Box::new(node{id:id, red: false, left:None, right:None}));
+                       node_.left = Some(Box::new(node{id:id, red: true, left:None, right:None}));
                    }
                    else
                    {
@@ -236,7 +254,7 @@ use std::fs::File;
                {
                    if node_.right.is_none()
                    {
-                       node_.right = Some(Box::new(node{id:id, red: false, left:None, right:None}));
+                       node_.right = Some(Box::new(node{id:id, red: true, left:None, right:None}));
                    } else
                    {
                        node_.right = node::insert(node_.right.take(),id );
@@ -435,6 +453,7 @@ use std::fs::File;
             {
                 if !node::isRed(&node_.as_ref().unwrap().left) && 
                     node::isRed(&node_.as_ref().unwrap().right)
+                // if node::isRed(&node_.as_ref().unwrap().right)
                 {
                     node_ = Some(node::rotateLeft(node_.unwrap()));
                 }
@@ -537,9 +556,8 @@ use std::fs::File;
                     panic!("nooo00ooowwww!!!! levels.len(): {}, level: {}", levels.len(), level);
                 }
             }
-            // output = format!("{:^22}\n", format!("node: {}",  self.id));
-            // output = format!("{:>7}\n", format!("node: {}",  self.id));
-            output = format!("{}\n", format!("//node: {}",  self.id));
+            // output = format!("{}\n", format!("//node: {}",  self.id));
+            output = format!("{}\n", format!("//node: {} RED: {}",  self.id, self.red));
             if(self.left.is_some())
             {
                 let left = self.left.as_ref().unwrap();
