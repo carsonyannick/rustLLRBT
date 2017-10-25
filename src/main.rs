@@ -13,7 +13,7 @@ fn main()
         if input.command_is(b"add")
         {
             println!("inside add()");
-            btree::Btree::insert(input.argument);
+            // btree::Btree::insert(input.argument,input.command);
         }
         else if input.command_is(b"search")
         {

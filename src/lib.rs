@@ -7,9 +7,13 @@ mod tests
     fn it_works() 
     {
 
-         super::Btree::insert(33);             // 1
+         super::Btree::insert(33, b"assdfsjfhsfhsdjkfhsdfjsdklfjsdfjsdkfhasfhwfnwehawfjawekafjwerjfwlfdf");             // 1
          assert!(super::Btree::search(33));
 
+         super::Btree::insert(33, b"second time round");             // 1
+         assert!(super::Btree::search(33));
+
+         /*
          super::Btree::insert(23);             // 2
          assert!(super::Btree::search(23));
 
@@ -74,6 +78,7 @@ mod tests
          assert!(!super::Btree::search(113));  // 3
          assert!(!super::Btree::search(78));   // 4
          assert!(!super::Btree::search(7));    // 5
+         */
     }
 
     use super::socket::*;
@@ -102,7 +107,8 @@ use std::fs::File;
    {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result 
         {
-            write!(f, "(id: {}, left: {} right: {})", self.id, printNode(&self.left), printNode(&self.right))
+            write!(f, "(id: {}, data: {}, left: {} right: {})", self.id,
+            ::std::str::from_utf8(&self.data).unwrap(), printNode(&self.left), printNode(&self.right))
         }
    }
 
@@ -126,6 +132,7 @@ use std::fs::File;
            {
                if node_.id == id
                {
+                   println!("search result: {}", node_);
                    return true;
                }
                if id < node_.id
@@ -141,13 +148,13 @@ use std::fs::File;
        false
    }
 
-    pub fn insert(id: u32)
+    pub fn insert(id: u32, data: &[u8])
     {
         unsafe
         {
             println!("insert: {}", id);
             let mut root_ =  root.take();
-            root_ = node::insert(root_, id);
+            root_ = node::insert(root_, id, data);
             root_.as_mut().unwrap().red = false;
             root = root_.take();
             count = count + 1;
@@ -179,55 +186,71 @@ use std::fs::File;
 
    impl node
    {
-       pub fn new(id: u32) -> node
+       pub fn new(id: u32, data: &[u8]) -> node
        {
-           node{id:id, data:[0;30], red: true, left:None, right:None}
+           let mut data_: [u8;30];
+           data_ = [0;30];
+           // needs testing:
+           data_.iter_mut().zip(data.iter()).for_each(|(a,b)| *a = *b);
+           println!("data_ {:?}", data_);
+           node{id:id, data:data_, red: true, left:None, right:None}
        }
    }
 
 
-    impl<'a> node
+    impl node
     {
+        fn changeValue(&mut self, data: &[u8])
+        {
+           self.data.iter_mut().zip(data.iter()).for_each(|(a,b)| *a = *b);
+           let size = self.data.len();
+           self.data[data.len()..size].iter_mut().for_each(|a| *a = 0);
+        }
         
         pub fn insert(
                       mut node_: Option<Box<node>>,
-                      id: u32 ) -> Option<Box<node>>
+                      id: u32,
+                      data: &[u8]) -> Option<Box<node>>
          {
             match node_
             {
                 None => 
                 { 
                     // Some(Box::new(node{id:id, red: true, left:None, right:None})) 
-                    Some(Box::new(node::new(id)))
+                    // Some(Box::new(node::new(id,&data)))
+                    Some(Box::new(node::new(id,data)))
                 },
                 Some(x) => 
                 {
-                    node::insert_(x,id)
+                    node::insert_(x,id,data)
                 }
             }
         }
 
         pub fn insert_(
-                      // mut self,
                       mut node_: Box<node>,
-                      id: u32 ) -> Option<Box<node>>
+                      id: u32,
+                      data: &[u8]) -> Option<Box<node>>
         {
                if node::isRed(&node_.left) && node::isRed(&node_.right)
                {    
                    node_.colorFlip();
                }
 
-
-               if id < node_.id 
+               if id == node_.id
+               {
+                   node_.changeValue(data);
+               }
+               else if id < node_.id 
                {
                    if node_.left.is_none()
                    {
                        // node_.left = Some(Box::new(node{id:id, red: true, left:None, right:None}));
-                        node_.left = Some(Box::new(node::new(id))); 
+                        node_.left = Some(Box::new(node::new(id, data))); 
                    }
                    else
                    {
-                       node_.left = node::insert(node_.left.take(),id );
+                       node_.left = node::insert(node_.left.take(),id, data );
                    }
                }
                else
@@ -235,10 +258,10 @@ use std::fs::File;
                    if node_.right.is_none()
                    {
                        // node_.right = Some(Box::new(node{id:id, red: true, left:None, right:None}));
-                        node_.right = Some(Box::new(node::new(id)));
+                        node_.right = Some(Box::new(node::new(id, data)));
                    } else
                    {
-                       node_.right = node::insert(node_.right.take(),id );
+                       node_.right = node::insert(node_.right.take(),id, data );
                    }
                }
 
