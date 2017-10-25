@@ -8,11 +8,15 @@ mod tests
     {
 
          super::Btree::insert(33, b"assdfsjfhsfhsdjkfhsdfjsdklfjsdfjsdkfhasfhwfnwehawfjawekafjwerjfwlfdf");             // 1
-         assert!(super::Btree::search(33));
+         // assert!(super::Btree::search(33));
 
          super::Btree::insert(33, b"second time round");             // 1
-         assert!(super::Btree::search(33));
+         // assert!(super::Btree::search(33));
 
+         assert!(!super::Btree::delete(38));
+         assert!(super::Btree::delete(33));
+         assert!(!super::Btree::delete(33));
+         assert!(!super::Btree::delete(50));
          /*
          super::Btree::insert(23);             // 2
          assert!(super::Btree::search(23));
@@ -123,7 +127,7 @@ use std::fs::File;
        none
    }
        
-   pub fn search(id: u32) -> bool
+   pub fn search(id: u32) -> Option<[u8;30]>
    {
        unsafe
        {
@@ -133,7 +137,7 @@ use std::fs::File;
                if node_.id == id
                {
                    println!("search result: {}", node_);
-                   return true;
+                   return Some(node_.data);
                }
                if id < node_.id
                {
@@ -145,7 +149,7 @@ use std::fs::File;
                }
            }
        }
-       false
+       None
    }
 
     pub fn insert(id: u32, data: &[u8])
@@ -161,18 +165,20 @@ use std::fs::File;
         }
     }
 
-    pub fn delete(id: u32)
+    pub fn delete(id: u32) -> bool
     {
+        let mut deleted = false;
         unsafe
         {
             let mut root_ =  root.take();
-            root_ = node::delete(root_, id);
+            root_ = node::delete(root_, id, &mut deleted);
             if root_.is_some()
             {
                 root_.as_mut().unwrap().red = false;
             }
             root = root_.take();
         }
+        deleted
     }
 
    pub struct node 
@@ -351,7 +357,9 @@ use std::fs::File;
         
         pub fn delete(
                       mut node_: Option<Box<node>>,
-                      id: u32 ) -> Option<Box<node>>
+                      id: u32,
+                      // deleted: &mut bool) -> Option<Box<node>>
+                      deleted: &mut bool) -> Option<Box<node>>
          {
             match node_
             {
@@ -361,7 +369,7 @@ use std::fs::File;
                 },
                 Some(x) => 
                 {
-                    let p = node::delete_(x,id);
+                    let p = node::delete_(x,id,deleted);
                     node::fixUp(p)
                 }
             }
@@ -369,7 +377,8 @@ use std::fs::File;
 
         pub fn delete_(
                       mut node_: Box<node>,
-                      id: u32 ) -> Option<Box<node>>
+                      id: u32,
+                      deleted: &mut bool) -> Option<Box<node>>
          {
             if id < node_.id 
             {
@@ -378,7 +387,7 @@ use std::fs::File;
                 {
                      node_= node::moveRedLeft( node_);
                 }
-                 node_.left = node::delete( node_.left.take(), id);
+                 node_.left = node::delete( node_.left.take(), id, deleted);
             }
             else
             {
@@ -394,6 +403,7 @@ use std::fs::File;
                    {
                        count = count - 1;
                    }
+                   *deleted = true;
                    return None;
                 }
 
@@ -416,7 +426,7 @@ use std::fs::File;
             }
             else
             {
-                 node_.right = node::delete( node_.right.take(), id);
+                 node_.right = node::delete( node_.right.take(), id, deleted);
             }
             Some(( node_))
          }
