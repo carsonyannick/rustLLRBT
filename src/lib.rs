@@ -1,4 +1,5 @@
 #![feature(drop_types_in_const)]
+pub mod socket;
 #[cfg(test)]
 mod tests 
 {
@@ -6,31 +7,6 @@ mod tests
     fn it_works() 
     {
 
-         super::Btree::insert(33);             // 1
-         super::Btree::insert(23);             // 1
-         super::Btree::insert(113);             // 1
-         super::Btree::insert(78);             // 1
-         super::Btree::insert(7);             // 1
-
-         super::Btree::insert(423);             // 1
-         super::Btree::insert(1413);             // 1
-         super::Btree::insert(478);             // 1
-         super::Btree::insert(74);             // 1
-         // super::Btree::node::draw();
-
-         super::Btree::insert(4323);             // 1
-         super::Btree::insert(1913);             // 1
-         super::Btree::insert(4278);             // 1
-         super::Btree::insert(724);             // 1
-
-         super::Btree::insert(3323);             // 1
-         super::Btree::insert(9913);             // 1
-         super::Btree::insert(2278);             // 1
-         super::Btree::insert(2724);             // 1
-
-         super::Btree::node::draw();
-
-        /*
          super::Btree::insert(33);             // 1
          assert!(super::Btree::search(33));
 
@@ -54,8 +30,7 @@ mod tests
 
          super::Btree::node::draw();
 
-         // remove 3
-         assert!(super::Btree::search(113));
+         // remove 3 assert!(super::Btree::search(113));
          super::Btree::delete(113);            // 3
 
          assert!(super::Btree::search(33));    // 1
@@ -99,15 +74,24 @@ mod tests
          assert!(!super::Btree::search(113));  // 3
          assert!(!super::Btree::search(78));   // 4
          assert!(!super::Btree::search(7));    // 5
-         */
     }
+
+    use super::socket::*;
+    // use socket;
+    fn server()
+    {
+        let socketAddress = String::from("/tmp/LLRBTRustSocket");
+        // super::socket::new(socketAddress);
+        server::new(socketAddress);
+
+    }
+
 }
 
-pub mod  Btree 
+pub mod Btree 
 {
 
 use std::fmt;
-// use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 
@@ -188,9 +172,19 @@ use std::fs::File;
    {
         pub id: u32,
         pub red: bool,
+        pub data: [u8;30],
         pub left:  Option<Box< node>>,
         pub right: Option<Box< node>>,
    }
+
+   impl node
+   {
+       pub fn new(id: u32) -> node
+       {
+           node{id:id, data:[0;30], red: true, left:None, right:None}
+       }
+   }
+
 
     impl<'a> node
     {
@@ -202,7 +196,10 @@ use std::fs::File;
             match node_
             {
                 None => 
-                { Some(Box::new(node{id:id, red: false, left:None, right:None})) },
+                { 
+                    // Some(Box::new(node{id:id, red: true, left:None, right:None})) 
+                    Some(Box::new(node::new(id)))
+                },
                 Some(x) => 
                 {
                     node::insert_(x,id)
@@ -221,11 +218,12 @@ use std::fs::File;
                }
 
 
-               if id <node_.id 
+               if id < node_.id 
                {
                    if node_.left.is_none()
                    {
-                       node_.left = Some(Box::new(node{id:id, red: false, left:None, right:None}));
+                       // node_.left = Some(Box::new(node{id:id, red: true, left:None, right:None}));
+                        node_.left = Some(Box::new(node::new(id))); 
                    }
                    else
                    {
@@ -236,7 +234,8 @@ use std::fs::File;
                {
                    if node_.right.is_none()
                    {
-                       node_.right = Some(Box::new(node{id:id, red: false, left:None, right:None}));
+                       // node_.right = Some(Box::new(node{id:id, red: true, left:None, right:None}));
+                        node_.right = Some(Box::new(node::new(id)));
                    } else
                    {
                        node_.right = node::insert(node_.right.take(),id );
@@ -435,6 +434,7 @@ use std::fs::File;
             {
                 if !node::isRed(&node_.as_ref().unwrap().left) && 
                     node::isRed(&node_.as_ref().unwrap().right)
+                // if node::isRed(&node_.as_ref().unwrap().right)
                 {
                     node_ = Some(node::rotateLeft(node_.unwrap()));
                 }
@@ -487,7 +487,7 @@ use std::fs::File;
             Some(node::rotateRight(nodeBox))
         }
 
-        pub fn draw()
+        pub fn drawToFile()
         {
             let &root_;
             unsafe
@@ -526,6 +526,30 @@ use std::fs::File;
             };
         }
 
+        pub fn draw() -> String
+        {
+            let &root_;
+            unsafe
+            {
+                root_ =  root.as_ref().unwrap();
+            }
+
+            let mut levels: Vec<Vec<String>> = Vec::new();
+            root_.draw_(&mut levels, 1);
+            let mut output = String::new();
+
+            for outer in &levels
+            {
+                for inner in outer
+                {
+                    println!("{}", inner);
+                    output += inner;
+                };
+
+            }
+            output
+        }
+
         pub fn draw_(&self, ref mut levels:  &mut Vec<Vec<String>>, level: usize)
         {
             let mut output = String::new();
@@ -537,9 +561,8 @@ use std::fs::File;
                     panic!("nooo00ooowwww!!!! levels.len(): {}, level: {}", levels.len(), level);
                 }
             }
-            // output = format!("{:^22}\n", format!("node: {}",  self.id));
-            // output = format!("{:>7}\n", format!("node: {}",  self.id));
-            output = format!("{}\n", format!("//node: {}",  self.id));
+            // output = format!("{}\n", format!("//node: {}",  self.id));
+            output = format!("{}\n", format!("//node: {} RED: {}",  self.id, self.red));
             if(self.left.is_some())
             {
                 let left = self.left.as_ref().unwrap();
