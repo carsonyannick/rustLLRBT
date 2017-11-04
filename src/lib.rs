@@ -6,83 +6,128 @@ mod tests
     #[test]
     fn it_works() 
     {
+        /*
+    let data = [0;120];
+
+            super::Btree::insert(11,&data);
+            super::Btree::insert(232311,&data);
+            super::Btree::insert(14341,&data);
+            super::Btree::insert(14,&data);
+            super::Btree::insert(141,&data);
+            super::Btree::insert(111111111,&data);
+            println!("Before");
+            println!("{}",super::Btree::node::printInOrder());
+            println!("After:");
 
          super::Btree::insert(33, b"assdfsjfhsfhsdjkfhsdfjsdklfjsdfjsdkfhasfhwfnwehawfjawekafjwerjfwlfdf");             // 1
-         // assert!(super::Btree::search(33));
+         assert!(super::Btree::search(33).is_some());
 
-         super::Btree::insert(33, b"second time round");             // 1
-         // assert!(super::Btree::search(33));
-
+         */
+        
          assert!(!super::Btree::delete(38));
-         assert!(super::Btree::delete(33));
+         assert!(!super::Btree::delete(33));
          assert!(!super::Btree::delete(33));
          assert!(!super::Btree::delete(50));
-         /*
-         super::Btree::insert(23);             // 2
-         assert!(super::Btree::search(23));
 
-         super::Btree::insert(113);            // 3
-         assert!(super::Btree::search(113));
+         // insert 1
+         super::Btree::insert(33, b"second time round");             // 1
+         assert!(super::Btree::search(33).is_some());
 
-         super::Btree::insert(78);             // 4
-         assert!(super::Btree::search(78));
+         assert!(super::Btree::search(33).is_some());    // 1
+         assert!(!super::Btree::search(23).is_some());    // 2
+         assert!(!super::Btree::search(113).is_some());   // 3
+         assert!(!super::Btree::search(78).is_some());    // 4
+         assert!(!super::Btree::search(7).is_some());     // 5
 
-         super::Btree::insert(7);              // 5
-         assert!(super::Btree::search(7));
+         // insert 2
+         super::Btree::insert(23, b"data");             // 2
+         assert!(super::Btree::search(23).is_some());
 
-         assert!(super::Btree::search(33));    // 1
-         assert!(super::Btree::search(23));    // 2
-         assert!(super::Btree::search(113));   // 3
-         assert!(super::Btree::search(78));    // 4
-         assert!(super::Btree::search(7));     // 5
+         assert!(super::Btree::search(33).is_some());    // 1
+         assert!(super::Btree::search(23).is_some());    // 2
+         assert!(!super::Btree::search(113).is_some());   // 3
+         assert!(!super::Btree::search(78).is_some());    // 4
+         assert!(!super::Btree::search(7).is_some());     // 5
 
-         super::Btree::node::draw();
+         // insert 3
+         super::Btree::insert(113, b"data");            // 3
+         assert!(super::Btree::search(113).is_some());
 
-         // remove 3 assert!(super::Btree::search(113));
-         super::Btree::delete(113);            // 3
+         assert!(super::Btree::search(33).is_some());    // 1
+         assert!(super::Btree::search(23).is_some());    // 2
+         assert!(super::Btree::search(113).is_some());   // 3
+         assert!(!super::Btree::search(78).is_some());    // 4
+         assert!(!super::Btree::search(7).is_some());     // 5
 
-         assert!(super::Btree::search(33));    // 1
-         assert!(super::Btree::search(23));    // 2
-         assert!(!super::Btree::search(113));  // 3
-         assert!(super::Btree::search(78));    // 4
-         assert!(super::Btree::search(7));     // 5
+         // insert 4
+         super::Btree::insert(78, b"data");             // 4
+         assert!(super::Btree::search(78).is_some());
+
+         assert!(super::Btree::search(33).is_some());    // 1
+         assert!(super::Btree::search(23).is_some());    // 2
+         assert!(super::Btree::search(113).is_some());   // 3
+         assert!(super::Btree::search(78).is_some());    // 4
+         assert!(!super::Btree::search(7).is_some());     // 5
+
+         // insert 5
+         super::Btree::insert(7, b"data");              // 5
+         assert!(super::Btree::search(7).is_some());
+
+         assert!(super::Btree::search(33).is_some());    // 1
+         assert!(super::Btree::search(23).is_some());    // 2
+         assert!(super::Btree::search(113).is_some());   // 3
+         assert!(super::Btree::search(78).is_some());    // 4
+         assert!(super::Btree::search(7).is_some());     // 5
+
+         // super::Btree::node::draw();
+        // println!("{}",super::Btree::node::printInOrder());
+
+         // remove 3 
+         assert!(super::Btree::search(113).is_some());
+         super::Btree::delete(113);                      // 3
+
+         assert!(super::Btree::search(33).is_some());    // 1
+         assert!(super::Btree::search(23).is_some());    // 2
+         assert!(!super::Btree::search(113).is_some());  // 3
+         assert!(super::Btree::search(78).is_some());    // 4
+         assert!(super::Btree::search(7).is_some());     // 5
 
          // remove 5
          super::Btree::delete(7);              // 5
 
-         assert!(super::Btree::search(33));    // 1
-         assert!(super::Btree::search(23));    // 2
-         assert!(!super::Btree::search(113));  // 3
-         assert!(super::Btree::search(78));    // 4
-         assert!(!super::Btree::search(7));    // 5
+         assert!(super::Btree::search(33).is_some());    // 1
+         assert!(super::Btree::search(23).is_some());    // 2
+         assert!(!super::Btree::search(113).is_some());  // 3
+         assert!(super::Btree::search(78).is_some());    // 4
+         assert!(!super::Btree::search(7).is_some());    // 5
 
          // remove 2
          super::Btree::delete(23);             // 2
 
-         assert!(super::Btree::search(33));    // 1
-         assert!(!super::Btree::search(23));   // 2
-         assert!(!super::Btree::search(113));  // 3
-         assert!(super::Btree::search(78));    // 4
-         assert!(!super::Btree::search(7));    // 5
+         assert!(super::Btree::search(33).is_some());    // 1
+         assert!(!super::Btree::search(23).is_some());   // 2
+         assert!(!super::Btree::search(113).is_some());  // 3
+         assert!(super::Btree::search(78).is_some());    // 4
+         assert!(!super::Btree::search(7).is_some());    // 5
 
          // remove 1
          super::Btree::delete(33);             // 1
 
-         assert!(!super::Btree::search(33));   // 1
-         assert!(!super::Btree::search(23));   // 2
-         assert!(!super::Btree::search(113));  // 3
-         assert!(super::Btree::search(78));    // 4
-         assert!(!super::Btree::search(7));    // 5
+         assert!(!super::Btree::search(33).is_some());   // 1
+         assert!(!super::Btree::search(23).is_some());   // 2
+         assert!(!super::Btree::search(113).is_some());  // 3
+         assert!(super::Btree::search(78).is_some());    // 4
+         assert!(!super::Btree::search(7).is_some());    // 5
 
          // remove 4
          super::Btree::delete(78);             // 4
 
-         assert!(!super::Btree::search(33));   // 1
-         assert!(!super::Btree::search(23));   // 2
-         assert!(!super::Btree::search(113));  // 3
-         assert!(!super::Btree::search(78));   // 4
-         assert!(!super::Btree::search(7));    // 5
-         */
+         assert!(!super::Btree::search(33).is_some());   // 1
+         assert!(!super::Btree::search(23).is_some());   // 2
+         assert!(!super::Btree::search(113).is_some());  // 3
+         assert!(!super::Btree::search(78).is_some());   // 4
+         assert!(!super::Btree::search(7).is_some());    // 5
+
     }
 
     use super::socket::*;
@@ -92,7 +137,6 @@ mod tests
         let socketAddress = String::from("/tmp/LLRBTRustSocket");
         // super::socket::new(socketAddress);
         server::new(socketAddress);
-
     }
 
 }
@@ -111,22 +155,13 @@ use std::fs::File;
    {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result 
         {
-            write!(f, "(id: {}, data: {}, left: {} right: {})", self.id,
-            ::std::str::from_utf8(&self.data).unwrap(), printNode(&self.left), printNode(&self.right))
+            // write!(f, "(id: {}, data: {}, left: {} right: {})", self.id,
+            // ::std::str::from_utf8(&self.data).unwrap(), printNode(&self.left), printNode(&self.right))
+            
+            write!(f, "id: {} data: {}\n", self.id, ::std::str::from_utf8(&self.data).unwrap())
         }
    }
 
-   pub fn printNode(node_: &Option<Box<node>>) -> String
-   {
-       if node_.is_some()
-       {
-           return node_.as_ref().unwrap().id.to_string();
-       }
-
-       let none = String::from("None");
-       none
-   }
-       
    pub fn search(id: u32) -> Option<[u8;30]>
    {
        unsafe
@@ -621,6 +656,43 @@ use std::fs::File;
                 output += &format!("{}", format!("right: {}\n", "None"));
             }
             levels[level-1].push(output);
+        }
+
+        pub fn printInOrder() -> String
+        {
+            let &root_;
+            unsafe
+            {
+                root_ =  root.as_ref().unwrap();
+            }
+
+            let mut output = String::new();
+            root_.printInOrder_(&mut output, true);
+
+            output
+        }
+
+        pub fn printInOrder_(&self, output:  &mut String, root_: bool)
+        {
+
+            if(self.left.is_some())
+            {
+                let left = self.left.as_ref().unwrap();
+                left.printInOrder_(output, false);
+                *output += format!("left {}", left).as_str();
+            }
+            
+            if root_ == true
+            {
+                *output += format!("self {}", self).as_str();
+            }
+
+            if(self.right.is_some())
+            {
+                let right = self.right.as_ref().unwrap();
+                right.printInOrder_(output, false);
+                *output += format!("right {}", right).as_str();
+            }
         }
 
      }

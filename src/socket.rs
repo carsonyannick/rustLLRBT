@@ -51,7 +51,8 @@ pub struct result
 {
     pub command:  [u8;7],
     // pub argument: [u8;10],
-    pub argument: u32,
+    pub id: u32,
+    pub data: [u8;30],
 }
 
 impl Default for result
@@ -61,7 +62,8 @@ impl Default for result
         result {
             command: [0;7],
             // argument: [0;10],
-            argument: 0,
+            id: 0,
+            data: [0;30],
         }
     }
 }
@@ -95,40 +97,95 @@ impl clientSocket
 
     pub fn listen(&mut self) -> result
     {
-        let mut buf = [0;10];
         let mut res = result::default();
-        // res.command = [0;6];
 
+        // 1) read command
         match self.stream.read_exact(&mut res.command)
         {
             Ok(()) => 
             {
+                res.command[6] = b'\0';
+                #[cfg(feature="debug")]
+                {
+                    let out = ::std::str::from_utf8(&res.command).unwrap();
+                    println!("after first match (command) inside listen() {}", out);
+                }
+
                 ()
             }
             Err(e) =>
             {
-                // panic!("error reading clientSocket (command) failed... {}", e);
+                panic!("error reading clientSocket (command) failed... {}", e);
             }
         };
-        // println!("after first match inside listen()");
 
-        // match self.stream.read_exact(&mut res.argument)
+        // 2) read id
+        let mut buf = [0;7];
         match self.stream.read_exact(&mut buf)
         {
             Ok(()) => 
             {
-                // println!("buf {:?}", buf);
-                let out_ = ::std::str::from_utf8(&buf[0..8]).unwrap();
-                println!("buf str {:?}", out_);
-                res.argument = out_.parse::<u32>().unwrap();
-                // let mut out = &buf[..];
-                // let out_ = out.read_u32::<LittleEndian>().unwrap();
-                println!("after second match inside listen() {}", out_);
+                let out = ::std::str::from_utf8(&buf[0..6]).unwrap();
+
+                res.id = out.parse::<u32>().unwrap();
+
+                #[cfg(feature="debug")]
+                {
+                    println!("before conversion to int, id {:?}", buf);
+                    println!("after second match (id) inside listen() {}", res.id);
+                }
+
+            }
+            Err(e) =>
+            {
+                panic!("error reading clientSocket (id) failed... {}", e);
+            }
+        };
+
+        // 3) length of data
+        let mut buf = [0;2];
+        let dataLength: usize;
+        match self.stream.read_exact(&mut buf)
+        {
+            Ok(()) => 
+            {
+                let mut out = ::std::str::from_utf8(&buf).unwrap();
+
+                dataLength = out.parse::<usize>().unwrap();
+
+                #[cfg(feature="debug")]
+                {
+                    println!("before conversion to int, dataLength {:?}", buf);
+                    println!("after (dataLength) inside listen() {}", dataLength);
+                }
+
+            }
+            Err(e) =>
+            {
+                panic!("error reading clientSocket (dataLength) failed... {}", e);
+            }
+        };
+
+        // 4) read data
+        // match self.stream.read_exact(&mut res.data)
+        match self.stream.read_exact(&mut res.data[0..(dataLength)])
+        {
+            Ok(()) => 
+            {
+                // res.data[29] = 0;
+                // res.data[dataLength] = b'\0';
+
+                #[cfg(feature="debug")]
+                {
+                    let out = ::std::str::from_utf8(&res.data).unwrap();
+                    println!("after third match (data) inside listen() {}", out);
+                }
+
                 return res
             }
             Err(e) =>
             {
-                panic!("error reading clientSocket (argument) failed... {}", e);
+                panic!("error reading clientSocket (data) failed... {}", e);
             }
         };
     }
