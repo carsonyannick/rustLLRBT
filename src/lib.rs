@@ -21,7 +21,6 @@ mod tests
 
          super::Btree::insert(33, b"assdfsjfhsfhsdjkfhsdfjsdklfjsdfjsdkfhasfhwfnwehawfjawekafjwerjfwlfdf");             // 1
          assert!(super::Btree::search(33).is_some());
-
          */
         
          assert!(!super::Btree::delete(38));
@@ -30,7 +29,7 @@ mod tests
          assert!(!super::Btree::delete(50));
 
          // insert 1
-         super::Btree::insert(33, b"second time round");             // 1
+         super::Btree::insert(33, b"33");             // 1
          assert!(super::Btree::search(33).is_some());
 
          assert!(super::Btree::search(33).is_some());    // 1
@@ -40,37 +39,37 @@ mod tests
          assert!(!super::Btree::search(7).is_some());     // 5
 
          // insert 2
-         super::Btree::insert(23, b"data");             // 2
+         super::Btree::insert(23, b"23");             // 2
          assert!(super::Btree::search(23).is_some());
 
          assert!(super::Btree::search(33).is_some());    // 1
          assert!(super::Btree::search(23).is_some());    // 2
-         assert!(!super::Btree::search(113).is_some());   // 3
-         assert!(!super::Btree::search(78).is_some());    // 4
-         assert!(!super::Btree::search(7).is_some());     // 5
+         assert!(!super::Btree::search(113).is_some());  // 3
+         assert!(!super::Btree::search(78).is_some());   // 4
+         assert!(!super::Btree::search(7).is_some());    // 5
 
          // insert 3
-         super::Btree::insert(113, b"data");            // 3
+         super::Btree::insert(113, b"113");            // 3
          assert!(super::Btree::search(113).is_some());
 
          assert!(super::Btree::search(33).is_some());    // 1
          assert!(super::Btree::search(23).is_some());    // 2
          assert!(super::Btree::search(113).is_some());   // 3
-         assert!(!super::Btree::search(78).is_some());    // 4
-         assert!(!super::Btree::search(7).is_some());     // 5
+         assert!(!super::Btree::search(78).is_some());   // 4
+         assert!(!super::Btree::search(7).is_some());    // 5
 
          // insert 4
-         super::Btree::insert(78, b"data");             // 4
+         super::Btree::insert(78, b"78");             // 4
          assert!(super::Btree::search(78).is_some());
 
          assert!(super::Btree::search(33).is_some());    // 1
          assert!(super::Btree::search(23).is_some());    // 2
          assert!(super::Btree::search(113).is_some());   // 3
          assert!(super::Btree::search(78).is_some());    // 4
-         assert!(!super::Btree::search(7).is_some());     // 5
+         assert!(!super::Btree::search(7).is_some());    // 5
 
          // insert 5
-         super::Btree::insert(7, b"data");              // 5
+         super::Btree::insert(7, b"7");              // 5
          assert!(super::Btree::search(7).is_some());
 
          assert!(super::Btree::search(33).is_some());    // 1
@@ -280,7 +279,7 @@ use std::fs::File;
 
                if id == node_.id
                {
-                   node_.changeValue(data);
+                   // node_.changeValue(data);
                }
                else if id < node_.id 
                {
@@ -447,21 +446,24 @@ use std::fs::File;
                 {
                      node_= node::moveRedRight( node_);
                 }
-            }
-
-            if id == node_.id
-            {
-                node_.id =
+            
+                if id == node_.id
                 {
-                    let leftMostNode = node::getMinNode(&node_.right).as_ref().unwrap();
-                    leftMostNode.id
-                };
+                    let tup =
+                    {
+                        let leftMostNode = node::getMinNode(&node_.right).as_ref().unwrap();
+                        (leftMostNode.id, leftMostNode.data)
+                    };
 
-                node_.right = node::deleteMinHelper( node_.right.take());
-            }
-            else
-            {
-                 node_.right = node::delete( node_.right.take(), id, deleted);
+                    node_.id = tup.0;
+                    node_.data = tup.1;
+
+                    node_.right = node::deleteMinHelper( node_.right.take());
+                }
+                else
+                {
+                     node_.right = node::delete( node_.right.take(), id, deleted);
+                }
             }
             Some(( node_))
          }
@@ -478,12 +480,14 @@ use std::fs::File;
                 }
                 return None
             }
-            let node_tmp = node_.unwrap();
+            let mut node_tmp = node_.unwrap();
             if node_tmp.left.is_some() && !node::isRed(&node_tmp.left) &&
                 node_tmp.right.is_some() && !node::isRed(&node_tmp.left.as_ref().unwrap().left)
             {
-                let node_t = node::moveRedLeft(node_tmp);
-                node_ = Some(node_t);
+                // let node_t = node::moveRedLeft(node_tmp);
+                // node_ = Some(node_t);
+                node_tmp = node::moveRedLeft(node_tmp);
+                node_ = Some(node_tmp);
             }
             else
             {
@@ -506,8 +510,10 @@ use std::fs::File;
                 {
                     node_ = Some(node::rotateLeft(node_.unwrap()));
                 }
-                if !node::isRed(&node_.as_ref().unwrap().left) && node_.as_ref().unwrap().left.is_some() &&
-                    node::isRed(&node_.as_ref().unwrap().left.as_ref().unwrap().left)
+                // if !node::isRed(&node_.as_ref().unwrap().left) && node_.as_ref().unwrap().left.is_some() &&
+                // if node::isRed(&node_.as_ref().unwrap().left) && node_.as_ref().unwrap().left.is_some() &&
+                if node::isRed(&node_.as_ref().unwrap().left) &&
+                   node::isRed(&node_.as_ref().unwrap().left.as_ref().unwrap().left)
                 {
                     node_ = Some(node::rotateRight(node_.unwrap()));
                 }
@@ -522,7 +528,8 @@ use std::fs::File;
             {
                 return node_;
             }
-            node::getMinNode(node_)
+            // node::getMinNode(node_)
+            node::getMinNode(&node_.as_ref().unwrap().left)
         }
 
         fn moveRedRight(mut node_: Box<node>) -> Box<node>
@@ -679,22 +686,16 @@ use std::fs::File;
             {
                 let left = self.left.as_ref().unwrap();
                 left.printInOrder_(output, false);
-                *output += format!("left {}", left).as_str();
             }
             
-            if root_ == true
-            {
-                *output += format!("self {}", self).as_str();
-            }
+            *output += format!("{} {}\n", self.id, ::std::str::from_utf8(&self.data).unwrap()).as_str();
 
             if(self.right.is_some())
             {
                 let right = self.right.as_ref().unwrap();
                 right.printInOrder_(output, false);
-                *output += format!("right {}", right).as_str();
             }
         }
 
      }
-
  }
