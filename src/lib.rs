@@ -458,7 +458,7 @@ use std::fs::File;
                     node_.id = tup.0;
                     node_.data = tup.1;
 
-                    node_.right = node::deleteMinHelper( node_.right.take());
+                    node_.right = node::deleteMinHelper( node_.right.take(), deleted);
                 }
                 else
                 {
@@ -469,7 +469,8 @@ use std::fs::File;
          }
 
         pub fn deleteMinHelper(
-            mut node_: Option<Box<node>>) -> Option<Box<node>>
+            mut node_: Option<Box<node>>,
+              deleted: &mut bool) -> Option<Box<node>>
         {
             if node_.as_ref().unwrap().left.is_none()
             {
@@ -478,6 +479,7 @@ use std::fs::File;
                 {
                     count = count - 1;
                 }
+                *deleted = true;
                 return None
             }
             let mut node_tmp = node_.unwrap();
@@ -494,7 +496,7 @@ use std::fs::File;
                 node_ = Some(node_tmp);
             }
             let mut left = node_.as_mut().unwrap().left.take();
-            left = node::deleteMinHelper(left);
+            left = node::deleteMinHelper(left, deleted);
             node_.as_mut().unwrap().left = left;
             node::fixUp(node_)
         }
@@ -676,6 +678,7 @@ use std::fs::File;
             let mut output = String::new();
             root_.printInOrder_(&mut output, true);
 
+            output = format!("\n{}\n", output); 
             output
         }
 

@@ -15,6 +15,7 @@ fn main()
     {
         signal(2, interrupt);
     }
+
     let serverOption = btree::socket::server::new(String::from("/tmp/rustLLRBTSocket"));
 
     loop
@@ -28,13 +29,16 @@ fn main()
 
         let input = client.listen();
         // println!("command {:?} argument {:?}", input.command, input.argument);
+        let data = ::std::str::from_utf8(&input.data).unwrap();
 
         if input.command_is(b"add")
         {
+            let data_ = ::std::str::from_utf8(&input.data).unwrap();
             println!("inside add(), id {}, data {}",input.id,::std::str::from_utf8(&input.data).unwrap());
 
             btree::Btree::insert(input.id,&input.data);
-            client.send(String::from("Added!"));
+            client.send(format!("{} {} added", input.id, data_));
+            // client.send(String::from("Added!"));
         }
         else if input.command_is(b"search")
         {
@@ -47,12 +51,14 @@ fn main()
             {
                 None => 
                 {
-                    reply.push_str("not found");
+                    // reply.push_str("not found");
+                    reply = format!("not found {} {}", input.id, data);
                 },
                 Some(x) => 
                 {
                     // println!("search result: {:?}", &x);
-                    reply = format!("found {}", ::std::str::from_utf8(&x).unwrap());
+                    // reply = format!("found {}", ::std::str::from_utf8(&x).unwrap());
+                    reply = format!("found {} {}", input.id, ::std::str::from_utf8(&x).unwrap());
                 }
             }
 
@@ -61,8 +67,17 @@ fn main()
         }
         else if input.command_is(b"delete")
         {
+            let mut reply = String::new();
             println!("inside delete() id: {}", input.id);
-            btree::Btree::delete(input.id);
+            if btree::Btree::delete(input.id) == true
+            {
+                reply = format!("deleted {} {}", input.id, data);
+            }
+            else
+            {
+                reply = format!("{} {} not present", input.id, data);
+            }
+            client.send(reply);
         }
         else if input.command_is(b"draw")
         {
