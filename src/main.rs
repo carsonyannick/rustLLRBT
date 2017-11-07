@@ -18,6 +18,7 @@ fn main()
 
     let serverOption = btree::socket::server::new(String::from("/tmp/rustLLRBTSocket"));
 
+    let mut reply = String::new();
     loop
     {
         let mut client = serverOption.accept();
@@ -28,7 +29,6 @@ fn main()
         }
 
         let input = client.listen();
-        // println!("command {:?} argument {:?}", input.command, input.argument);
         let data = ::std::str::from_utf8(&input.data).unwrap();
 
         if input.command_is(b"add")
@@ -38,14 +38,13 @@ fn main()
 
             btree::Btree::insert(input.id,&input.data);
             client.send(format!("{} {} added", input.id, data_));
-            // client.send(String::from("Added!"));
         }
         else if input.command_is(b"search")
         {
             println!("inside search(), id {}, data {}",input.id,::std::str::from_utf8(&input.data).unwrap());
             let result = btree::Btree::search(input.id);
 
-            let mut reply = String::new();
+            // let mut reply = String::new();
             
             match result
             {
@@ -67,7 +66,7 @@ fn main()
         }
         else if input.command_is(b"delete")
         {
-            let mut reply = String::new();
+            // let mut reply = String::new();
             println!("inside delete() id: {}", input.id);
             if btree::Btree::delete(input.id) == true
             {
@@ -82,7 +81,8 @@ fn main()
         else if input.command_is(b"draw")
         {
             println!("inside draw()");
-            let reply = btree::Btree::node::printInOrder();
+            // let reply = btree::Btree::node::printInOrder();
+            reply = btree::Btree::node::printInOrder();
             println!("draw:\n{}", reply);
             client.send(reply);
         }
