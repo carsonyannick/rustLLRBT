@@ -1,7 +1,20 @@
 extern crate btree;
 
+extern "C" {
+  fn signal(sig: u32, cb: extern fn(u32)) -> fn(u32);
+}
+
+extern fn interrupt(_:u32) {
+  std::fs::remove_file("/tmp/rustLLRBTSocket").unwrap();
+  std::process::exit(0);
+}
+
 fn main()
 {
+    unsafe 
+    {
+        signal(2, interrupt);
+    }
     let serverOption = btree::socket::server::new(String::from("/tmp/rustLLRBTSocket"));
 
     loop
@@ -50,11 +63,6 @@ fn main()
         {
             println!("inside delete() id: {}", input.id);
             btree::Btree::delete(input.id);
-        }
-        else if input.command_is(b"print")
-        {
-            println!("inside draw()");
-            client.send(btree::Btree::node::printInOrder());
         }
         else if input.command_is(b"draw")
         {
